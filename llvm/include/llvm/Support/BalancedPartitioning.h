@@ -41,13 +41,16 @@
 
 #include "raw_ostream.h"
 #include "llvm/ADT/ArrayRef.h"
+#include "llvm/Config/llvm-config.h"
 #include "llvm/Support/Compiler.h"
 
 #include <atomic>
-#include <condition_variable>
-#include <mutex>
 #include <random>
 #include <vector>
+#if LLVM_ENABLE_THREADS
+#include <condition_variable>
+#include <mutex>
+#endif
 
 namespace llvm {
 
@@ -117,8 +120,10 @@ private:
   /// threads.
   struct BPThreadPool {
     ThreadPoolInterface &TheThreadPool;
+#if LLVM_ENABLE_THREADS
     std::mutex mtx;
     std::condition_variable cv;
+#endif
     /// The number of threads that could spawn more threads
     std::atomic<int> NumActiveThreads = 0;
     /// Only true when all threads are down spawning new threads
