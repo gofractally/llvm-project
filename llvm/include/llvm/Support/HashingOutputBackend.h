@@ -23,7 +23,10 @@
 #include "llvm/Support/VirtualOutputBackend.h"
 #include "llvm/Support/VirtualOutputConfig.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Config/llvm-config.h"
+#if LLVM_ENABLE_THREADS
 #include <mutex>
+#endif
 
 namespace llvm::vfs {
 
@@ -63,7 +66,9 @@ template <typename HasherT> class HashingOutputBackend : public OutputBackend {
 private:
   friend class HashingOutputFile<HasherT>;
   void addOutputFile(StringRef Path, StringRef Hash) {
+#if LLVM_ENABLE_THREADS
     std::lock_guard<std::mutex> Lock(OutputHashLock);
+#endif
     OutputHashes[Path] = Hash.str();
   }
 
@@ -95,7 +100,9 @@ public:
   }
 
 private:
+#if LLVM_ENABLE_THREADS
   std::mutex OutputHashLock;
+#endif
   StringMap<std::string> OutputHashes;
 };
 
