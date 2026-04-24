@@ -17,10 +17,16 @@
 #include "llvm/Support/Threading.h"
 #include <cassert>
 #include <mutex>
-#include <shared_mutex>
 
-#if defined(__APPLE__)
+// Platforms whose libc++ ships <shared_mutex> as a hard #error when
+// _LIBCPP_HAS_NO_THREADS is set (wasi-sdk's wasm32-wasip1 libc++) need
+// to take the custom RWMutexImpl path so we never include <shared_mutex>.
+#if defined(__APPLE__) || defined(__wasi__)
 #define LLVM_USE_RW_MUTEX_IMPL
+#endif
+
+#if !defined(LLVM_USE_RW_MUTEX_IMPL)
+#include <shared_mutex>
 #endif
 
 namespace llvm {
