@@ -495,6 +495,16 @@ static std::string computeLanaiDataLayout() {
 }
 
 static std::string computeWebAssemblyDataLayout(const Triple &TT) {
+  // The "p16" environment is a psiserve-local wasm32 ABI variant that
+  // gives address space 0 a 16-bit pointer width while keeping every
+  // other psABI attribute (index type, integer widths, address spaces
+  // 10/20) identical to the stock wasm32 layout. The underlying wasm32
+  // ISA is unchanged; this is purely a C/C++ ABI knob that lets
+  // sizeof(void*) == 2 for code targeting 64 KiB-confined linear memory.
+  if (TT.getArch() == Triple::wasm32 && TT.getEnvironmentName() == "p16")
+    return "e-m:e-p:16:16-p10:8:8-p20:8:8-i64:64-"
+           "i128:128-n32:64-S128-ni:1:10:20";
+
   return TT.getArch() == Triple::wasm64
              ? (TT.isOSEmscripten() ? "e-m:e-p:64:64-p10:8:8-p20:8:8-i64:64-"
                                       "i128:128-f128:64-n32:64-S128-ni:1:10:20"

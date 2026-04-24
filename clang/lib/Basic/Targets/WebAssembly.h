@@ -199,6 +199,14 @@ public:
   explicit WebAssembly32TargetInfo(const llvm::Triple &T,
                                    const TargetOptions &Opts)
       : WebAssemblyTargetInfo(T, Opts) {
+    // The "p16" environment on a wasm32 triple (e.g. wasm32-wasip1-p16) is
+    // a psiserve-local ABI variant: the wasm32 ISA is unchanged, but C/C++
+    // pointers are laid out as 16-bit values (halving sizeof(T*) for
+    // pointer-dense structs). size_t / ptrdiff_t / intptr_t stay 32-bit to
+    // match WASI's __wasi_size_t and to keep pointer-diff arithmetic
+    // overflow-safe.
+    if (T.getEnvironmentName() == "p16")
+      PointerAlign = PointerWidth = 16;
     resetDataLayout();
   }
 
