@@ -9,9 +9,12 @@
 #ifndef LLVM_SUPPORT_LSP_LOGGING_H
 #define LLVM_SUPPORT_LSP_LOGGING_H
 
+#include "llvm/Config/llvm-config.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/FormatVariadic.h"
+#if LLVM_ENABLE_THREADS
 #include <mutex>
+#endif
 
 namespace llvm {
 namespace lsp {
@@ -51,8 +54,10 @@ private:
   /// The minimum logging level. Messages with lower level are ignored.
   Level LogLevel = Level::Error;
 
-  /// A mutex used to guard logging.
+#if LLVM_ENABLE_THREADS
+  /// A mutex used to guard logging across threads.
   std::mutex Mutex;
+#endif
 };
 } // namespace lsp
 } // namespace llvm

@@ -33,7 +33,9 @@ void Logger::log(Level LogLevel, const char *Fmt,
 
   // Format the message and print to errs.
   llvm::sys::TimePoint<> Timestamp = std::chrono::system_clock::now();
+#if LLVM_ENABLE_THREADS
   std::lock_guard<std::mutex> LogGuard(Logger.Mutex);
+#endif
   llvm::errs() << llvm::formatv(
       "{0}[{1:%H:%M:%S.%L}] {2}\n",
       LogLevelIndicators[static_cast<unsigned>(LogLevel)], Timestamp, Message);
