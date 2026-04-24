@@ -17,9 +17,11 @@
 #include "llvm/Support/Threading.h"
 
 #include <algorithm>
-#include <condition_variable>
 #include <functional>
+#if LLVM_ENABLE_THREADS
+#include <condition_variable>
 #include <mutex>
+#endif
 
 namespace llvm {
 
@@ -57,6 +59,7 @@ inline size_t getThreadCount() { return 1; }
 #endif
 
 namespace detail {
+#if LLVM_ENABLE_THREADS
 class Latch {
   uint32_t Count;
   mutable std::mutex Mutex;
@@ -85,6 +88,20 @@ public:
     Cond.wait(lock, [&] { return Count == 0; });
   }
 };
+#else
+// Single-threaded fallback: no synchronization needed.
+class Latch {
+  uint32_t Count;
+
+public:
+  explicit Latch(uint32_t Count = 0) : Count(Count) {}
+  ~Latch() { assert(Count == 0); }
+
+  void inc() { ++Count; }
+  void dec() { --Count; }
+  void sync() const {}
+};
+#endif
 } // namespace detail
 
 class TaskGroup {
