@@ -429,6 +429,17 @@ MVT WebAssemblyTargetLowering::getPointerTy(const DataLayout &DL,
     return MVT::externref;
   if (AS == WebAssembly::WasmAddressSpace::WASM_ADDRESS_SPACE_FUNCREF)
     return MVT::funcref;
+  // For the default linear-memory address space the DAG-level pointer
+  // type is the wasm memory INDEX type, not the C-level storage size.
+  // That's i32 on wasm32 and i64 on wasm64 regardless of sizeof(void*).
+  // The p16 ABI variant uses DL.getPointerSizeInBits() == 16 for the
+  // C-level storage size, but the value that actually rides the wasm
+  // operand stack when a pointer is loaded must be i32 (the smallest
+  // wasm-legal integer that covers the address space). getPointerMemTy
+  // below still tracks the memory-storage size so loads/stores emit the
+  // correct narrow i32.load16_u / i32.store16.
+  if (AS == 0)
+    return Subtarget->hasAddr64() ? MVT::i64 : MVT::i32;
   return TargetLowering::getPointerTy(DL, AS);
 }
 
